@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.pox.mapper.boardMapper">
+	<!-- 게시판전용 쿼리들.. -->
+	<insert id="create" parameterType="BoardVO">
+		INSERT INTO tbl_board
+		(username, title, content)
+		values(#{username},#{title}, #{content})
+		<!-- 위의 인설트구문을 실행후 해당글의 bno값을 다시 BoardVO에담아 보내줍니다.. -->
+		<selectKey keyProperty="bno" resultType="Integer" order="AFTER">
+			SELECT
+			LAST_INSERT_ID()
+		</selectKey>
+	</insert>
+
+	<select id="read" resultType="BoardVO">
+		select * from tbl_board where
+		bno=#{bno}
+	</select>
+
+	<update id="update">
+		update tbl_board set title = #{title}, content =
+		#{content}
+		where bno = #{bno}
+	</update>
+
+	<delete id="delete" parameterType="int">
+		delete FROM tbl_board where
+		bno=#{bno}
+	</delete>
+
+	<sql id="search">
+		<if test="searchType != null">
+			<if test="searchType == 't'.toString()">
+				and title like CONCAT('%', #{keyword}, '%')
+			</if>
+			<if test="searchType == 'c'.toString()">
+				and content like CONCAT('%', #{keyword}, '%')
+			</if>
+			<if test="searchType == 'w'.toString()">
+				and writer like CONCAT('%', #{keyword}, '%')
+			</if>
+			<if test="searchType == 'tc'.toString()">
+				and ( title like CONCAT('%', #{keyword}, '%') OR content
+				like
+				CONCAT('%', #{keyword}, '%'))
+			</if>
+			<if test="searchType == 'cw'.toString()">
+				and ( content like CONCAT('%', #{keyword}, '%') OR writer
+				like
+				CONCAT('%', #{keyword}, '%'))
+			</if>
+			<if test="searchType == 'tcw'.toString()">
+				and ( title like CONCAT('%', #{keyword}, '%')
+				OR
+				content
+				like CONCAT('%', #{keyword}, '%')
+				OR
+				writer like CONCAT('%',
+				#{keyword}, '%'))
+			</if>
+		</if>
+	</sql>
+
+	<select id="listSearch" resultType="BoardVO">
+		select a.bno,a.username,a.title,a.content,
+		a.regdate,a.modidate,a.viewcnt,a.replycnt,count(b.bno) as filecnt
+		from
+		(select *
+		from tbl_board
+		where bno > 0
+		<include refid="search"></include>
+		order by bno desc
+		limit #{pageStart}, #{perPageNum}
+		) a left outer join
+		tbl_file b on a.bno=b.bno group by a.bno order by a.bno desc
+	</select>
+
+	<select id="listSearchCount" resultType="int">
+		select count(bno)
+		from
+		tbl_board
+		where bno > 0
+	</select>
+
+	<update id="updateReplyCnt"><!-- 리플개수.. -->
+		update tbl_board set replycnt = replycnt + #{amount} where bno =
+		#{bno}
+	</update>
+
+	<update id="updateViewCnt"><!-- 조회수증가 -->
+		update tbl_board set viewcnt = viewcnt +1 where bno =
+		#{bno}
+	</update>
+
+	<!-- 첨부파일... -->
+	<insert id="registFile" parameterType="FileVO">
+		insert into tbl_file
+		(bno,originName,uuidName)
+		values(#{bno},#{originName},#{uuidName})
+	</insert>
+
+	<select id="getFile" resultType="String" parameterType="Integer">
+		select uuidName
+		from tbl_file
+		where
+		bno=#{bno} order by regdate
+	</select>
+
+	<delete id="deleteFile" parameterType="Integer">
+		delete from tbl_file where
+		bno = #{bno}
+	</delete>
+	<!-- ???이건무슨용도인지?? -->
+	<insert id="replaceFile" parameterType="FileVO">
+		insert into
+		tbl_file(file, bno) values
+		(#{file},
+		#{bno})
+	</insert>
+
+</mapper>

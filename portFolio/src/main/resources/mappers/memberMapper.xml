@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.pox.mapper.memberMapper">
+
+	<insert id="create" parameterType="MemberVO">
+		insert into tbl_member
+		(username, password,name,email,gender)
+		values 
+		(
+		#{username,jdbcType=VARCHAR},
+		#{password, jdbcType=VARCHAR},
+		#{name,jdbcType=VARCHAR},
+		#{email, jdbcType=VARCHAR},
+		#{gender,jdbcType=VARCHAR} 
+		)
+	</insert>
+
+	<insert id="createAuth" parameterType="MemberVO">
+		insert into authorities
+		(username, authority) values
+		(#{username,jdbcType=VARCHAR},'ROLE_MEMBER')
+	</insert>
+	<select id="loginCheck" resultType="String">
+	select username from tbl_member where username=#{username}
+	</select>
+
+	<select id="read" resultType="MemberVO">
+		select * from tbl_member where
+		username=#{username}
+	</select>
+
+	<select id="userInfo" resultType="map" parameterType="java.lang.String"><!-- 사용자인증처리할때쓰임.. -->
+
+		SELECT username, password, IFNULL(name,"you didn't write your name!")
+		as name, IFNULL(email,"you didn't write your email!") as email,
+		gender, regdate, modidate, enabled
+		FROM tbl_member WHERE username =
+		#{username}
+
+	</select>
+
+	<select id="makeAuth" resultType="String" parameterType="java.lang.String"> <!-- 위에결과 다되면 이어서 바로 객체에 인증권한을 넣어줌 -->
+		SELECT
+		authority FROM authorities WHERE username = #{username}
+	</select>
+
+	<update id="update">
+		update tbl_member
+		<set>
+			<if test="password != null">password=#{password},</if>
+			<if test="name != null">name=#{name},</if>
+			<if test="email != null">email=#{email},</if>
+			<if test="gender != null">gender=#{gender},</if>
+			modidate = now()
+		</set>
+		where username =
+		#{username}
+	</update>
+
+	<delete id="delete">
+		delete from tbl_member where username=#{username}
+	</delete>
+
+	<delete id="deleteAuth">
+		delete from authorities where username=#{username}
+	</delete>
+
+
+
+	<sql id="search">
+		<if test="searchType == null">
+			order by regdate desc
+		</if>
+		<if test="searchType != null">
+			<if test="searchType == 'u'.toString()">
+				and username like CONCAT('%', #{keyword}, '%')
+			</if>
+			<if test="searchType == 'r'.toString()">
+				and regdate like CONCAT('%', #{keyword}, '%')
+			</if>
+			<if test="searchType == 'n'.toString()">
+				and name like CONCAT('%', #{keyword}, '%')
+			</if>
+			<if test="searchType == 'e'.toString()">
+				and email like CONCAT('%', #{keyword}, '%')
+			</if>
+			<if test="searchType == 'ur'.toString()">
+				and ( username like CONCAT('%', #{keyword}, '%')
+				OR
+				regdate
+				like CONCAT('%', #{keyword}, '%'))
+			</if>
+			<if test="searchType == 'rn'.toString()">
+				and ( regdate like CONCAT('%', #{keyword}, '%')
+				OR name
+				like CONCAT('%', #{keyword}, '%'))
+			</if>
+			<if test="searchType == 'urne'.toString()">
+				and ( username like CONCAT('%', #{keyword}, '%')
+				OR
+				regdate like CONCAT('%', #{keyword}, '%')
+				OR name like CONCAT('%',
+				#{keyword}, '%')
+				OR email like CONCAT('%', #{keyword}, '%'))
+			</if>
+			order by regdate desc
+		</if>
+	</sql>
+	<select id="listSearch" resultType="MemberVO">
+		select *
+		from tbl_member
+		<include refid="search"></include>
+		limit #{pageStart}, #{perPageNum}
+	</select>
+
+	<select id="listSearchCount" resultType="int">
+		select count(*) from tbl_member
+		<include refid="search"></include>
+	</select>
+
+</mapper>

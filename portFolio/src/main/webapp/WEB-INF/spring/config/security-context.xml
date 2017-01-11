@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+	xmlns:beans="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd">
+
+	<http pattern="/css/**" security="none" />
+	<http pattern="/html/**" security="none" />
+	<http pattern="/images/**" security="none" />
+	<http pattern="/js/**" security="none" />
+	<http pattern="/resource/**" security="none" />
+
+	<http pattern="/**/*.js" security="none" />
+	<http pattern="/**/*.css" security="none" />
+	<http pattern="/**/*.html" security="none" />
+	<http pattern="/resources/**" security='none' />
+
+	<http auto-config="true" use-expressions="true">
+		<headers>
+			<frame-options policy="SAMEORIGIN" />
+		</headers>
+		<csrf />
+		<intercept-url pattern="/resources/**" access="permitAll" />
+
+		<form-login login-page="/users/login" login-processing-url="/users/loginProcess"
+			username-parameter="username" password-parameter="password"
+			authentication-failure-url="/users/login?error"
+			authentication-success-handler-ref="userLoginSuccessHandler"
+			authentication-failure-handler-ref="userLoginFailureHandler" />
+
+		<remember-me key="wmoskey" token-validity-seconds="2419200" /> <!-- 4 주 -->
+
+		<logout logout-url="/users/logout" logout-success-url="/"
+			delete-cookies="JSESSIONID,SPRING_SECURITY_REMEMBER_ME_COOKIE,login,boardView"
+			invalidate-session="true" />
+
+		<session-management>
+			<concurrency-control max-sessions="1"
+				expired-url="/users/login_duplicate" />
+		</session-management>
+	</http>
+
+	<authentication-manager>
+		<authentication-provider user-service-ref="PoxUserService" />
+	</authentication-manager>
+
+	<beans:bean id="userLoginSuccessHandler" class="org.pox.interceptor.UserLoginSuccessHandler" />
+	<beans:bean id="userLoginFailureHandler" class="org.pox.interceptor.UserLoginFailureHandler" />
+	<beans:bean id='PoxUserService' class="org.pox.service.PoxUserService" />
+</beans:beans>

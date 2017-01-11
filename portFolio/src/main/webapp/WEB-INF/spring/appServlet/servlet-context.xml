@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/mvc"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:security="http://www.springframework.org/schema/security"
+	xmlns:websocket="http://www.springframework.org/schema/websocket"
+	xsi:schemaLocation="http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-4.2.xsd
+		http://www.springframework.org/schema/websocket http://www.springframework.org/schema/websocket/spring-websocket-4.3.xsd
+		http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+	<!-- Handles HTTP GET requests for /resources/** by efficiently serving 
+		up static resources in the ${webappRoot}/resources directory -->
+	<resources mapping="/resources/**" location="/resources/" />
+	<!-- Resolves views selected for rendering by @Controllers to .jsp resources 
+		in the /WEB-INF/views directory -->
+	<annotation-driven />
+	<beans:bean
+		class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<beans:property name="prefix" value="/WEB-INF/views/" />
+		<beans:property name="suffix" value=".jsp" />
+		<beans:property name="contentType" value="text/html; charset=UTF-8" />
+	</beans:bean>
+	<!-- 파일 다운로드를 위함 View 설정 -->
+	<beans:bean class="org.springframework.web.servlet.view.BeanNameViewResolver">
+		<beans:property name="order" value="0" />
+	</beans:bean>
+	<!-- multipartResolver -->
+	<beans:bean id="filterMultipartResolver"
+		class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<beans:property name="maxUploadSize" value="10485760" />
+		<beans:property name="defaultEncoding" value="UTF-8" />
+	</beans:bean>
+	<!-- multipartResolver -->
+
+	<beans:bean id="uploadPath" class="java.lang.String">
+		<beans:constructor-arg value="J:\\ServerUploading\\upload"></beans:constructor-arg>
+	</beans:bean>
+
+	<beans:bean id="BoardInterceptor" class="org.pox.interceptor.BoardInterceptor"></beans:bean>
+	<interceptors>
+		<interceptor>
+			<mapping path="/board/view" />
+			<beans:ref bean="BoardInterceptor" />
+		</interceptor>
+	</interceptors>
+
+	<beans:bean id="EchoHandler" class="org.pox.interceptor.EchoHandler"></beans:bean>
+	<websocket:handlers>
+		<websocket:mapping handler="EchoHandler" path="/echo" />
+		<websocket:sockjs />
+	</websocket:handlers>
+
+
+	<context:component-scan base-package="org.pox.controller" />
+	<security:global-method-security secured-annotations="enabled" />
+</beans:beans>

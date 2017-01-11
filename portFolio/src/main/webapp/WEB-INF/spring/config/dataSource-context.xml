@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.3.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.3.xsd">
+
+	<bean id="dataSource-MYSQL"
+		class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+		<property name="driverClassName" value="com.mysql.cj.jdbc.Driver" />
+		<property name="username" value="MYSQL" />
+		<property name="password" value="MYSQL" />
+		<property name="url"
+			value="jdbc:mysql://localhost:3306/jjk?useSSL=false&amp;serverTimezone=Asia/Seoul" />
+	</bean>
+
+	<bean id="sqlSessionFactory-MYSQL" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource-MYSQL" />
+		<property name="configLocation" value="classpath:/mybatis-config.xml" />
+		<property name="mapperLocations" value="classpath:mappers/**/*Mapper.xml" />
+	</bean>
+
+	<bean id="sqlSession-MYSQL" class="org.mybatis.spring.SqlSessionTemplate"
+		destroy-method="clearCache">
+		<constructor-arg index="0" name="sqlSessionFactory" ref="sqlSessionFactory-MYSQL" />
+	</bean>
+
+	<bean id="transactionManager-MYSQL"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource-MYSQL" />
+	</bean>
+
+	<tx:annotation-driven transaction-manager="transactionManager-MYSQL" />
+	<aop:aspectj-autoproxy />
+
+	<context:component-scan base-package="org.pox.persistence" />
+	<context:component-scan base-package="org.pox.service" />
+	<context:component-scan base-package="org.pox.aop" />
+</beans>
